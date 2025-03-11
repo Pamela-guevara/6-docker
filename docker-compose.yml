@@ -1,0 +1,94 @@
+services:
+  e-commerce-2:
+    image: e-commerce:uvi
+    container_name: e-commerce-2
+    ports:
+      - 5000:5000
+    networks:
+      - ms-network
+    environment:
+      - FLASK_CONTEXT=${FLASK_CONTEXT}
+      # el valor de REDIS_HOST = al container_name que tiene en su propio docker-compose.yml
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      # el valor de MSCATALOGO_URL, MSPAGOS_URL, MSCOMPRAS_URL, MSINVENTARIOS_URL = al container_name con el
+      # puerto 5000 ejemplo http://mscatalogo:5000
+      # desde el microservicio ecomerce se puede acceder a los microservicios mscatalogo, mspagos, mscompras,
+      # msinventarios por el container_name:puerto
+      # desde el host se accede a los microservicios como http://localhost:puerto ejemplo http://localhost:5001
+      # para mscatalogo, http://localhost:5002 para mspagos, http://localhost:5003 para mscompras, http://localhost:5004
+      # para msinventarios
+      - PRODUCTS_URL=${PRODUCTS_URL}
+      - PURCHASES_URL=${PURCHASES_URL}
+      - PAYMENTS_URL=${PAYMENTS_URL}
+      - STOCKS_URL=${STOCKS_URL}
+  ms-products-2:
+    image: ms-products:uvi
+    container_name: ms-products-2
+    depends_on:
+      - e-commerce-2
+    ports:
+      - 5001:5001
+    networks:
+      - ms-network
+    environment:
+      - FLASK_CONTEXT=${FLASK_CONTEXT}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      # la URI para el servidor se obtiene de container_name del docker-compose de postgresql:
+      # [postgresql://usuario:password@postgresql-servidor:5432/ecommerce]
+      - TEST_DATABASE_URI=${TEST_DATABASE_URI}
+      - DEV_DATABASE_URI=${DEV_DATABASE_URI}
+      - PROD_DATABASE_URI=${PROD_DATABASE_URI}
+  ms-payments-2:
+    image: ms-payments:uvi
+    container_name: ms-payments-2
+    depends_on:
+      - e-commerce-2
+    ports:
+      - 5002:5002
+    networks:
+      - ms-network
+    environment:
+      - FLASK_CONTEXT=${FLASK_CONTEXT}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - TEST_DATABASE_URI=${TEST_DATABASE_URI}
+      - DEV_DATABASE_URI=${DEV_DATABASE_URI}
+      - PROD_DATABASE_URI=${PROD_DATABASE_URI}
+  ms-purchases-2:
+    image: ms-purchases:uvi
+    container_name: ms-purchases-2
+    depends_on:
+      - e-commerce-2
+    ports:
+      - 5003:5003
+    networks:
+      - ms-network
+    environment:
+      - FLASK_CONTEXT=${FLASK_CONTEXT}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - TEST_DATABASE_URI=${TEST_DATABASE_URI}
+      - DEV_DATABASE_URI=${DEV_DATABASE_URI}
+      - PROD_DATABASE_URI=${PROD_DATABASE_URI}
+  ms-stocks-2:
+    image: ms-stocks:uvi
+    container_name: ms-stocks-2
+    depends_on:
+      - e-commerce-2
+    ports:
+      - 5004:5004
+    networks:
+      - ms-network
+    environment:
+      - FLASK_CONTEXT=${FLASK_CONTEXT}
+      - REDIS_HOST=${REDIS_HOST}
+      - REDIS_PORT=${REDIS_PORT}
+      - TEST_DATABASE_URI=${TEST_DATABASE_URI}
+      - DEV_DATABASE_URI=${DEV_DATABASE_URI}
+      - PROD_DATABASE_URI=${PROD_DATABASE_URI}
+# Todos los microservicios y servicios (redis, postgresql) deben estar en la misma red
+networks:
+  ms-network:
+    external: true
